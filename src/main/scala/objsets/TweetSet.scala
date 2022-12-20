@@ -40,7 +40,7 @@ abstract class TweetSet extends TweetSetInterface:
    * Question: Can we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def filter(p: Tweet => Boolean): TweetSet
+  def filter(p: Tweet => Boolean): TweetSet = filterAcc(p, Empty())
 
   /**
    * This is a helper method for `filter` that propagates the accumulated tweets.
@@ -107,9 +107,7 @@ abstract class TweetSet extends TweetSetInterface:
 class Empty extends TweetSet:
   def isEmpty = true
 
-  def filter(p: Tweet => Boolean): TweetSet = Empty()
-
-  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = ???
+  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
 
   /**
    * The following methods are already implemented
@@ -125,25 +123,10 @@ class Empty extends TweetSet:
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet:
   def isEmpty = false
-
-  def filter(p: Tweet => Boolean): TweetSet =
-    if(p(elem)) {
-      NonEmpty(elem, left.filter(p), right.filter(p))
-    } else {
-      if(left.isEmpty() && right.isEmpty()) {
-        Empty()
-      } else if(left.isEmpty()) {
-        right.filter(p)
-      } else if(right.isEmpty()) {
-        left.filter(p)
-      } else {
-        left.filter(p).incl(right.filter(p))
-      }
-    }
-    
   
-  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = ???
-
+  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet =
+    if(p(elem)) { right.filterAcc(p, left.filterAcc(p, acc.incl(elem))) } 
+    else { right.filterAcc(p, left.filterAcc(p, acc)) }
 
   /**
    * The following methods are already implemented
