@@ -64,7 +64,7 @@ abstract class TweetSet extends TweetSetInterface:
    * Question: Should we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def mostRetweeted: Tweet = ???
+  def mostRetweeted: Tweet = descendingByRetweet.head
 
   /**
    * Returns a list containing all tweets of this set, sorted by retweet count
@@ -75,7 +75,7 @@ abstract class TweetSet extends TweetSetInterface:
    * Question: Should we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def descendingByRetweet: TweetList = ???
+  def descendingByRetweet: TweetList
 
   /**
    * The following methods are already implemented
@@ -107,6 +107,8 @@ abstract class TweetSet extends TweetSetInterface:
 class Empty extends TweetSet:
   def isEmpty = true
 
+  def descendingByRetweet: TweetList = Nil
+
   def union(that: TweetSet): TweetSet = that
 
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
@@ -125,6 +127,25 @@ class Empty extends TweetSet:
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet:
   def isEmpty = false
+
+  def descendingByRetweet: TweetList =
+    def order(left: TweetList, right: TweetList) : TweetList =
+      if (left.isEmpty && right.isEmpty) { 
+        Nil 
+      } else if(left.isEmpty) {
+        Cons(right.head, order(left, right.tail))
+      } else if(right.isEmpty) {
+        Cons(left.head, order(left.tail, right))  
+      } else if(left.head.retweets < right.head.retweets) {
+        Cons(right.head, order(left, right.tail))
+      } else if(left.head.retweets >= right.head.retweets) {
+        Cons(left.head, order(left.tail, right)) 
+      } else ???
+
+    order(
+      order(Cons(elem, Nil), right.descendingByRetweet), 
+      left.descendingByRetweet
+    )
 
   def union(that: TweetSet): TweetSet = 
     right.union(left.union(that.incl(elem)))
